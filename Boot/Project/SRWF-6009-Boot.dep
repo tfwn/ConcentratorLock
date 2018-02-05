@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<project>
+  <fileVersion>2</fileVersion>
+  <fileChecksum>2822171255</fileChecksum>
+  <configuration>
+    <name>Debug</name>
+    <outputs>
+      <file>$PROJ_DIR$\..\Source\Main.c</file>
+      <file>$PROJ_DIR$\..\Source\Flash.c</file>
+      <file>$PROJ_DIR$\..\Source\Hal.c</file>
+      <file>$PROJ_DIR$\..\Source\Interrupt.c</file>
+      <file>$PROJ_DIR$\..\Source\Uart_Update.c</file>
+      <file>$PROJ_DIR$\..\Source\Uart.c</file>
+      <file>$PROJ_DIR$\..\Source\Timer.c</file>
+      <file>$PROJ_DIR$\..\Source\Common.c</file>
+    </outputs>
+  </configuration>
+  <configuration>
+    <name>Release</name>
+    <outputs/>
+    <forcedrebuild>
+      <name>[MULTI_TOOL]</name>
+      <tool>ILINK</tool>
+    </forcedrebuild>
+  </configuration>
+</project>
+
+

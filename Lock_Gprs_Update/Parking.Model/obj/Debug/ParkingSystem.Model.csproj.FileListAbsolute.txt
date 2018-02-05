@@ -1,0 +1,11 @@
+D:\myProject\停车场协议\Model\bin\Debug\ParkingSystem.Model.dll
+D:\myProject\停车场协议\Model\bin\Debug\ParkingSystem.Model.pdb
+D:\myProject\停车场协议\Model\obj\Debug\ParkingSystem.Model.csproj.CoreCompileInputs.cache
+D:\myProject\停车场协议\Model\obj\Debug\ParkingSystem.Model.dll
+D:\myProject\停车场协议\Model\obj\Debug\ParkingSystem.Model.pdb
+D:\myProject\停车场协议\ParkingSystem.Model\obj\Debug\ParkingSystem.Model.csproj.CoreCompileInputs.cache
+D:\myProject\停车场协议\ParkingSystem.Model\obj\Debug\ParkingSystem.Model.csprojResolveAssemblyReference.cache
+D:\myProject\停车场协议\ParkingSystem.Model\bin\Debug\Parking.Model.dll
+D:\myProject\停车场协议\ParkingSystem.Model\bin\Debug\Parking.Model.pdb
+D:\myProject\停车场协议\ParkingSystem.Model\obj\Debug\Parking.Model.dll
+D:\myProject\停车场协议\ParkingSystem.Model\obj\Debug\Parking.Model.pdb

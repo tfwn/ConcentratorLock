@@ -1,0 +1,12 @@
+E:\PC software\8009_Update\8009_Update\obj\Debug\8009_Update.csprojResolveAssemblyReference.cache
+E:\PC software\8009_Update\8009_Update\obj\Debug\_8009_Update.FrmMain.resources
+E:\PC software\8009_Update\8009_Update\obj\Debug\_8009_Update.Properties.Resources.resources
+E:\PC software\8009_Update\8009_Update\obj\Debug\_8009_Update.UpdateFun.resources
+E:\PC software\8009_Update\8009_Update\obj\Debug\8009_Update.csproj.GenerateResource.Cache
+E:\PC software\8009_Update\8009_Update\bin\Debug\8009_Update.exe
+E:\PC software\8009_Update\8009_Update\bin\Debug\8009_Update.pdb
+E:\PC software\8009_Update\8009_Update\bin\Debug\UsbLibrary.dll
+E:\PC software\8009_Update\8009_Update\bin\Debug\UsbLibrary.pdb
+E:\PC software\8009_Update\8009_Update\bin\Debug\UsbLibrary.xml
+E:\PC software\8009_Update\8009_Update\obj\Debug\8009_Update.exe
+E:\PC software\8009_Update\8009_Update\obj\Debug\8009_Update.pdb

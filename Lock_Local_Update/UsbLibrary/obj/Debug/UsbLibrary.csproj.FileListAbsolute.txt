@@ -1,0 +1,10 @@
+E:\PC software\8009_Update\UsbLibrary\bin\Debug\UsbLibrary.XML
+E:\PC software\8009_Update\UsbLibrary\bin\Debug\UsbLibrary.dll
+E:\PC software\8009_Update\UsbLibrary\bin\Debug\UsbLibrary.pdb
+E:\PC software\8009_Update\UsbLibrary\obj\Debug\UsbLibrary.dll
+E:\PC software\8009_Update\UsbLibrary\obj\Debug\UsbLibrary.pdb
+D:\sunray\工具\6009集中器升级调试工具\集中器升级软件(本地) - 地锁\8009_Update\UsbLibrary\bin\Debug\UsbLibrary.XML
+D:\sunray\工具\6009集中器升级调试工具\集中器升级软件(本地) - 地锁\8009_Update\UsbLibrary\bin\Debug\UsbLibrary.dll
+D:\sunray\工具\6009集中器升级调试工具\集中器升级软件(本地) - 地锁\8009_Update\UsbLibrary\bin\Debug\UsbLibrary.pdb
+D:\sunray\工具\6009集中器升级调试工具\集中器升级软件(本地) - 地锁\8009_Update\UsbLibrary\obj\Debug\UsbLibrary.dll
+D:\sunray\工具\6009集中器升级调试工具\集中器升级软件(本地) - 地锁\8009_Update\UsbLibrary\obj\Debug\UsbLibrary.pdb

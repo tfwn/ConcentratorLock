@@ -1,0 +1,24 @@
+E:\PC software\8009_Update\8009_Update\bin\Debug\UsbLibrary.dll
+E:\PC software\8009_Update\8009_Update\bin\Debug\UsbLibrary.pdb
+E:\PC software\8009_Update\8009_Update\bin\Debug\UsbLibrary.xml
+E:\PC software\8009_Update\8009_Update\obj\Debug\Concentrator_Update.csprojResolveAssemblyReference.cache
+E:\PC software\8009_Update\8009_Update\obj\Debug\_8009_Update.FrmMain.resources
+E:\PC software\8009_Update\8009_Update\obj\Debug\_8009_Update.UpdateFun.resources
+E:\PC software\8009_Update\8009_Update\obj\Debug\Concentrator_Update.csproj.GenerateResource.Cache
+E:\PC software\8009_Update\8009_Update\bin\Debug\Concentrator_Update.exe
+E:\PC software\8009_Update\8009_Update\bin\Debug\Concentrator_Update.pdb
+E:\PC software\8009_Update\8009_Update\obj\Debug\Concentrator_Update.Properties.Resources.resources
+E:\PC software\8009_Update\8009_Update\obj\Debug\Concentrator_Update.exe
+E:\PC software\8009_Update\8009_Update\obj\Debug\Concentrator_Update.pdb
+D:\sunray\工具\6009集中器升级调试工具\集中器升级软件(本地) - 地锁\8009_Update\8009_Update\obj\Debug\Concentrator_Update.csprojResolveAssemblyReference.cache
+D:\sunray\工具\6009集中器升级调试工具\集中器升级软件(本地) - 地锁\8009_Update\8009_Update\obj\Debug\_8009_Update.FrmMain.resources
+D:\sunray\工具\6009集中器升级调试工具\集中器升级软件(本地) - 地锁\8009_Update\8009_Update\obj\Debug\_8009_Update.UpdateFun.resources
+D:\sunray\工具\6009集中器升级调试工具\集中器升级软件(本地) - 地锁\8009_Update\8009_Update\obj\Debug\Concentrator_Update.csproj.GenerateResource.Cache
+D:\sunray\工具\6009集中器升级调试工具\集中器升级软件(本地) - 地锁\8009_Update\8009_Update\bin\Debug\UsbLibrary.dll
+D:\sunray\工具\6009集中器升级调试工具\集中器升级软件(本地) - 地锁\8009_Update\8009_Update\bin\Debug\UsbLibrary.pdb
+D:\sunray\工具\6009集中器升级调试工具\集中器升级软件(本地) - 地锁\8009_Update\8009_Update\bin\Debug\UsbLibrary.xml
+D:\sunray\工具\6009集中器升级调试工具\集中器升级软件(本地) - 地锁\8009_Update\8009_Update\bin\Debug\Lock_Concentrator_Update.exe
+D:\sunray\工具\6009集中器升级调试工具\集中器升级软件(本地) - 地锁\8009_Update\8009_Update\bin\Debug\Lock_Concentrator_Update.pdb
+D:\sunray\工具\6009集中器升级调试工具\集中器升级软件(本地) - 地锁\8009_Update\8009_Update\obj\Debug\Lock_Concentrator_Update.exe
+D:\sunray\工具\6009集中器升级调试工具\集中器升级软件(本地) - 地锁\8009_Update\8009_Update\obj\Debug\Lock_Concentrator_Update.pdb
+D:\sunray\工具\6009集中器升级调试工具\集中器升级软件(本地) - 地锁\8009_Update\8009_Update\obj\Debug\Lock_Concentrator_Update.Properties.Resources.resources

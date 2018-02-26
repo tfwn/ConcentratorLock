@@ -32,6 +32,7 @@ namespace _8009_Update
         public enum enUpdateType
         {
             地锁系统 = 0,
+            无线模块系统 = 1,
             未知集中器,
         };
         public enUpdateProc UpdateStep = enUpdateProc.Update_End;
@@ -108,6 +109,11 @@ namespace _8009_Update
             if (rbt.Name == "rbt6009")
             {
                 UpdateType = enUpdateType.地锁系统;
+                NodeAddrLength = NodeAddrLength_6009;
+            }
+            else if (rbt.Name == "rbt2e28")
+            {
+                UpdateType = enUpdateType.无线模块系统;
                 NodeAddrLength = NodeAddrLength_6009;
             }
             else
@@ -645,6 +651,10 @@ namespace _8009_Update
             {
                 keyWord1 = "SRWF-CTP-PARKING-";
             }
+            else if (UpdateType == enUpdateType.无线模块系统)
+            {
+                keyWord1 = "SRWF-2E28-";
+            }
             keyWord = keyWord1.ToCharArray();
             startPos = 0;
             count = 0;
@@ -764,6 +774,13 @@ namespace _8009_Update
                 // 发送数据
                 dataTransmit(_6009CreatTxBuffer(txStruct));
             }
+            else if (UpdateType == enUpdateType.无线模块系统)
+            {
+                Protocol6009Struct txStruct = new Protocol6009Struct();
+                txStruct.CommandIDByte = 0x40;
+                // 发送数据
+                dataTransmit(_6009CreatTxBuffer(txStruct));
+            }
             else
             {
                 timerUpdate.Stop();
@@ -782,6 +799,17 @@ namespace _8009_Update
             string strVer = "";
 
             if (UpdateType == enUpdateType.地锁系统)
+            {
+                Protocol6009Struct rxStruct = Extract6009RxBuffer(RecBuf);
+                if (false == rxStruct.isSuccess || rxStruct.CommandIDByte != 0x40)
+                {
+                    return;
+                }
+                strVer = "软件版本" + ": " + rxStruct.DataByte[0].ToString("X2") + "." + rxStruct.DataByte[1].ToString("X2") + "\n";
+                strVer += "硬件版本" + ": " + rxStruct.DataByte[2].ToString("X2") + "." + rxStruct.DataByte[3].ToString("X2") + "\n";
+                strVer += "协议版本" + ": " + rxStruct.DataByte[4].ToString("X2") + "." + rxStruct.DataByte[5].ToString("X2");
+            }
+            else if (UpdateType == enUpdateType.无线模块系统)
             {
                 Protocol6009Struct rxStruct = Extract6009RxBuffer(RecBuf);
                 if (false == rxStruct.isSuccess || rxStruct.CommandIDByte != 0x40)
@@ -859,6 +887,49 @@ namespace _8009_Update
                 {
                     txStruct.DataByte[iLoop] = updateBuf[iPos++];
                 }
+
+                // 发送数据
+                dataTransmit(_6009CreatTxBuffer(txStruct));
+                UpdateWaitTime = 200;
+                UpdateRetryTimes--;
+            }
+            else if (UpdateType == enUpdateType.无线模块系统)
+            {
+                Protocol6009Struct txStruct = new Protocol6009Struct();
+                txStruct.CommandIDByte = 0xF4;
+                // 数据域
+                if (updateLength - AppUpdateWriteAddress > AppUpdateCountOnePacket)
+                {
+                    AppUpdateCurPkgBytes = AppUpdateCountOnePacket;
+                }
+                else
+                {
+                    AppUpdateCurPkgBytes = updateLength - AppUpdateWriteAddress;
+                }
+                txStruct.DataByte = new byte[AppUpdateCurPkgBytes + 12];
+                iLoop = 0;
+                // 增加CRC
+                txStruct.DataByte[iLoop++] = (byte)updateCrc;
+                txStruct.DataByte[iLoop++] = (byte)(updateCrc >> 8);
+                // 增加写入地址
+                txStruct.DataByte[iLoop++] = (byte)AppUpdateWriteAddress;
+                txStruct.DataByte[iLoop++] = (byte)(AppUpdateWriteAddress >> 8);
+                txStruct.DataByte[iLoop++] = (byte)(AppUpdateWriteAddress >> 16);
+                txStruct.DataByte[iLoop++] = (byte)(AppUpdateWriteAddress >> 24);
+                // 增加写入代码总长度
+                txStruct.DataByte[iLoop++] = (byte)updateLength;
+                txStruct.DataByte[iLoop++] = (byte)(updateLength >> 8);
+                txStruct.DataByte[iLoop++] = (byte)(updateLength >> 16);
+                txStruct.DataByte[iLoop++] = (byte)(updateLength >> 24);
+                // 本包升级代码的长度
+                txStruct.DataByte[iLoop++] = (byte)AppUpdateCurPkgBytes;
+                txStruct.DataByte[iLoop++] = (byte)(AppUpdateCurPkgBytes >> 8);
+                // 升级数据
+                iPos = AppUpdateWriteAddress;
+                for (; iLoop < txStruct.DataByte.Length; iLoop++)
+                {
+                    txStruct.DataByte[iLoop] = updateBuf[iPos++];
+                }
                  
                 // 发送数据
                 dataTransmit(_6009CreatTxBuffer(txStruct));
@@ -877,6 +948,15 @@ namespace _8009_Update
             {
                 Protocol6009Struct rxStruct = Extract6009RxBuffer(RecBuf);
                 if (false == rxStruct.isSuccess || rxStruct.CommandIDByte != 0xF1)
+                {
+                    return;
+                }
+                Array.Copy(rxStruct.DataByte, dataBuf, rxStruct.DataByte.Length);
+            }
+            else if (UpdateType == enUpdateType.无线模块系统)
+            {
+                Protocol6009Struct rxStruct = Extract6009RxBuffer(RecBuf);
+                if (false == rxStruct.isSuccess || rxStruct.CommandIDByte != 0xF4)
                 {
                     return;
                 }
@@ -906,7 +986,14 @@ namespace _8009_Update
                 {
                     timerUpdate.Stop();
                     UpdateStep = enUpdateProc.Update_End;
-                    MessageBox.Show("程序升级成功，主板将在10秒钟内重新启动。", "升级成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    if (UpdateType == enUpdateType.地锁系统)
+                    {
+                        MessageBox.Show("程序升级成功，主板将在10秒钟内重新启动。", "升级成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else if (UpdateType == enUpdateType.无线模块系统)
+                    {
+                        MessageBox.Show("无线模块升级程序下发成功。", "升级成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
                     btOpenUpdateFile.Enabled = true;
                     btRdVersionInfo.Enabled = true;
                     rbtBootUpdate.Enabled = true;

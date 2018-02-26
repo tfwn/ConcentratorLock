@@ -50,6 +50,7 @@
             this.lbRear = new System.Windows.Forms.Label();
             this.gpSelectType = new System.Windows.Forms.GroupBox();
             this.rbt6009 = new System.Windows.Forms.RadioButton();
+            this.rbt2e28 = new System.Windows.Forms.RadioButton();
             this.gpSelectFile.SuspendLayout();
             this.gpSelectMode.SuspendLayout();
             this.gpSelectType.SuspendLayout();
@@ -248,6 +249,7 @@
             // 
             // gpSelectType
             // 
+            this.gpSelectType.Controls.Add(this.rbt2e28);
             this.gpSelectType.Controls.Add(this.rbt6009);
             this.gpSelectType.Location = new System.Drawing.Point(21, 11);
             this.gpSelectType.Name = "gpSelectType";
@@ -261,12 +263,24 @@
             this.rbt6009.AutoSize = true;
             this.rbt6009.Location = new System.Drawing.Point(15, 29);
             this.rbt6009.Name = "rbt6009";
-            this.rbt6009.Size = new System.Drawing.Size(46, 17);
+            this.rbt6009.Size = new System.Drawing.Size(49, 17);
             this.rbt6009.TabIndex = 2;
             this.rbt6009.TabStop = true;
-            this.rbt6009.Text = "CTP";
+            this.rbt6009.Text = "地锁";
             this.rbt6009.UseVisualStyleBackColor = true;
             this.rbt6009.Click += new System.EventHandler(this.rbt_Click);
+            // 
+            // rbt2e28
+            // 
+            this.rbt2e28.AutoSize = true;
+            this.rbt2e28.Location = new System.Drawing.Point(95, 29);
+            this.rbt2e28.Name = "rbt2e28";
+            this.rbt2e28.Size = new System.Drawing.Size(73, 17);
+            this.rbt2e28.TabIndex = 3;
+            this.rbt2e28.TabStop = true;
+            this.rbt2e28.Text = "无线模块";
+            this.rbt2e28.UseVisualStyleBackColor = true;
+            this.rbt2e28.Click += new System.EventHandler(this.rbt_Click);
             // 
             // UpdateFun
             // 
@@ -315,5 +329,6 @@
         private System.Windows.Forms.Button btRdVersionInfo;
         private System.Windows.Forms.GroupBox gpSelectType;
         private System.Windows.Forms.RadioButton rbt6009;
+        private System.Windows.Forms.RadioButton rbt2e28;
     }
 }

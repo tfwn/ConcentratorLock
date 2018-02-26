@@ -131,6 +131,14 @@ void Main_Task(void *p_arg)
                 OSFlagPost(GlobalEventFlag, (OS_FLAGS)FLAG_DATA_UPLOAD_TIMER, OS_FLAG_SET, &err);
             }
         }
+
+        // 升级主机
+        if (DataUpHostTimer) {
+            if (0 == --DataUpHostTimer) {
+                OSFlagPost(GlobalEventFlag, (OS_FLAGS)FLAG_DATA_UPHOST_TIMER, OS_FLAG_SET, &err);
+            }
+        }
+
         // 时钟校时
         if (RTCTimingTimer) {
             if (0 == --RTCTimingTimer) {

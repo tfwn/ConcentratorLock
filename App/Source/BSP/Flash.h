@@ -47,6 +47,13 @@
 #define FLASH_UPGRADE_INFO_SIZE                 1                       // 升级文件参数保存位置大小
 
 
+#define FLASH_MODULE_UPGRADECODE_START_ADDR		((uint32)0x08060400)    // 无线模块升级文件存放的开始位置,385K开始,最大占据98K空间
+#define FLASH_MODULE_UPGRADECODE_SIZE			49                      // 升级文件,最大为98K,每一页为2K
+
+#define FLASH_MODULE_UPGRADE_INFO_START			((uint32)0x0807FC00)    // 升级文件参数保存位置,511K开始,占据2K空间
+#define FLASH_MODULE_UPGRADE_INFO_SIZE			1                       // 升级文件参数保存位置大小
+
+
 #define FLASH_START_MEMORYID                    0x0218
 
 /************************************************************************************************

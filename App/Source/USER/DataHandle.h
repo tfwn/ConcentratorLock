@@ -40,6 +40,7 @@
                                                      FLAG_DELAY_SAVE_TIMER |        \
                                                      FLAG_DATA_DOWNLOAD_TIMER |    \
                                                      FLAG_DATA_UPLOAD_TIMER |       \
+                                                     FLAG_DATA_UPHOST_TIMER |       \
                                                      FLAG_RTC_TIMING_TIMER)
 
 // 补抄数据相关参数定义
@@ -144,6 +145,7 @@ typedef enum {
     Software_Update_Cmd = 0xF1,                         // 程序升级命令
     Output_Monitior_Msg_Cmd = 0xF2,                     // 输出监控信息命令
     Eeprom_Check_Cmd = 0xF3,                            // Eeprom检查
+	Module_Software_Update_Cmd = 0xF4, 					// 无线模块升级命令
 
     // 无操作指令
     Idle_Cmd = 0xFF                                     // 无操作指令
@@ -186,6 +188,16 @@ typedef enum {
     Gprs_Connect_Msg = 0,                               // Gprs连接信息
     Total_Msg
 } MONITOR_MSG_TYPE;
+
+// 主机返回升级结果定义
+typedef enum {
+    UpHost_Success = 0,                                            // 成功
+    PkgCrc16Error,                                          // 本包升级数据校验错误
+    UpdateParamError,                                       // 升级数据的crc校验和总包数前后不一致
+    UpdateWrDataError,                                      // 写入升级数据失败
+    UpdateCodeLengthError,                                  // 代码的长度错误
+    UpdateCodeCrcError,                                     // 代码最后的crc校验错误
+} RESULT_ENUM;
 
 /************************************************************************************************
 *                                  Union Define Section
@@ -232,7 +244,8 @@ typedef struct {
     uint8 RTCService: 1;                                // 为1时表示授时服务任务正在进行中
     uint8 DataUpload: 1;                                // 为1时表示数据上传任务正在进行中
     uint8 DataForward: 1;                               // 为1时表示数据转发任务正在进行中
-    uint8 DataDownload: 1;                               // 为1时表示数据下发任务正在进行中
+    uint8 DataDownload: 1;                              // 为1时表示数据下发任务正在进行中
+    uint8 DataUpHost: 1;                                // 为1时表示主机升级任务正在进行中
 } TASK_STATUS_STRUCT;
 
 // 数据格式
@@ -271,6 +284,7 @@ typedef struct {
 ************************************************************************************************/
 DATAHANDLE_EXT uint8 SubNodesSaveDelayTimer;
 DATAHANDLE_EXT uint16 DataUploadTimer;
+DATAHANDLE_EXT uint16 DataUpHostTimer;
 DATAHANDLE_EXT uint16 DataDownloadTimer;
 DATAHANDLE_EXT uint16 RTCTimingTimer;
 DATAHANDLE_EXT OS_STK Task_DataHandle_Stk[TASK_DATAHANDLE_STK_SIZE];

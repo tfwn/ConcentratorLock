@@ -32,6 +32,7 @@
 #include <string.h>
 #include <md5.h>
 #include <aes.h>
+#include <version.h>
 
 
 #define OPERATOR_NUMBER	(0x53525746) //SWRF
@@ -43,6 +44,7 @@ uint8 PkgNo;
 PORT_NO MonitorPort = Usart_Debug;                      // 监控端口
 uint8 SubNodesSaveDelayTimer = 0;                       // 档案延时保存时间
 uint16 DataUploadTimer = 60;                            // 数据上传定时器
+uint16 DataUpHostTimer = 0;                            // 升级主机定时器
 uint16 DataDownloadTimer = 0;  // 数据下发定时器
 uint16 RTCTimingTimer = 60;                             // RTC校时任务启动定时器
 TASK_STATUS_STRUCT TaskRunStatus;                       // 任务运行状态
@@ -906,6 +908,12 @@ bool DataHandle_LockStatusReportProc(DATA_FRAME_STRUCT *DataFrmPtr)
 	uint8 result;
 	result = DataHandle_LockStatusDataSaveProc(DataFrmPtr);
 
+	// 数据测试，对于地锁的命令不予应答，只接收。
+	if (CURRENT_VERSION == SRWF_CTP_TEST){
+		OSMemPut(LargeMemoryPtr, DataFrmPtr);
+		return NONE_ACK;
+	}
+
     // 地锁上报状态数据处理函数，保存 + 回应地锁 + 上报服务器
     // 成功或者数据长度不对则应答。
     // 如果集中器空间已满，则不应答。
@@ -924,7 +932,10 @@ bool DataHandle_LockStatusReportProc(DATA_FRAME_STRUCT *DataFrmPtr)
         DataFrmPtr->PkgProp = DataHandle_SetPkgProperty(XOR_OFF, NONE_ACK, ACK_PKG, DOWN_DIR);
         DataHandle_SetPkgPath(DataFrmPtr, REVERSED);
         DataHandle_CreateTxData(DataFrmPtr);
-    }
+    } else {
+		OSMemPut(LargeMemoryPtr, DataFrmPtr);
+	}
+
     return NONE_ACK;
 }
 
@@ -1384,7 +1395,13 @@ void DataHandle_DataDownloadTask(void *p_arg)
         }
         cmd = (COMMAND_TYPE)meterBufPtr->MeterData[statusSize];
         dataLen = meterBufPtr->MeterData[statusSize + 2];
-
+		// 防止出现清空档案后第一次上传数据出现下发空命令
+		if( (dataLen == 0x0) || (cmd == 0x0) ){
+			OSMemPut(SmallMemoryPtr, meterBufPtr);
+			OSMemPut(LargeMemoryPtr, gprsDataFrmPtr);
+			OSMemPut(LargeMemoryPtr, txDataFrmPtr);
+			break;
+		}
         if (0 != memcmp(meterBufPtr->Address, SubNodes[nodeId].LongAddr, LONG_ADDR_SIZE) ||
             meterBufPtr->Crc8MeterData != CalCrc8(meterBufPtr->MeterData, NODE_INFO_SIZE - sizeof(METER_DATA_SAVE_FORMAT))) {
             Data_MeterDataInit(meterBufPtr, nodeId, meterDataLen);
@@ -1574,6 +1591,309 @@ bool DataHandle_ResetHostProc(void)
 
 }
 
+//仅用于快速切换 RF 串口波特率
+static void Uart_RF_Config(PORT_NO UartNo,
+                         PARITY_TYPE Parity,
+                         DATABITS_TYPE DataBits,
+                         STOPBITS_TYPE StopBits,
+                         uint32 Baudrate)
+{
+    USART_InitTypeDef USART_InitStruct;
+    GPIO_InitTypeDef GPIO_InitStruct;
+    NVIC_InitTypeDef NVIC_InitStruct;
+
+    switch (UartNo) {
+        case Usart_Rf:
+            RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);
+            RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO | RCC_APB2Periph_GPIOB, ENABLE); // 使能Usart3时钟
+
+            GPIO_InitStruct.GPIO_Pin = GPIO_Pin_10;                                     // USART3_Tx PB10
+            GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
+            GPIO_InitStruct.GPIO_Mode =  GPIO_Mode_AF_PP;                               // GPIO_Mode_AF_PP 复用推挽输出 修改为复用开漏输出
+            GPIO_Init(GPIOB, &GPIO_InitStruct);
+            GPIO_InitStruct.GPIO_Pin = GPIO_Pin_11;                                     // USART3_Rx PB11
+            GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN_FLOATING;                          // 普通输入模式(浮空)
+            GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+            USART_InitStruct.USART_BaudRate = Baudrate;                                 // 波特率
+            USART_InitStruct.USART_WordLength = DataBits;                               // 位长
+            USART_InitStruct.USART_StopBits = StopBits;                                 // 停止位数
+            USART_InitStruct.USART_Parity = Parity;                                     // 奇偶校验
+            USART_InitStruct.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
+            USART_InitStruct.USART_HardwareFlowControl = USART_HardwareFlowControl_None;// 流控设为无
+            USART_Init(USART3, &USART_InitStruct);                                      // 设置串口参数
+
+            NVIC_InitStruct.NVIC_IRQChannel = USART3_IRQn;                              // Usart3中断设置
+            NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 1;
+            NVIC_InitStruct.NVIC_IRQChannelSubPriority = 1;
+            NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
+            NVIC_Init(&NVIC_InitStruct);
+
+            USART_Cmd(USART3, ENABLE);
+            USART_ITConfig(USART3, USART_IT_RXNE, ENABLE);                              // 先使能接收中断
+            USART_ITConfig(USART3, USART_IT_TXE, DISABLE);                              // 先禁止发送中断,若先使能发送中断，则可能会先发00
+            break;
+        default:
+            break;
+    }
+
+    // Uart参数配置
+    // Uart_ParameterInit(UartNo, Baudrate);
+}
+
+/************************************************************************************************
+* Function Name: DataHandle_Updata_HostTask
+* Decription   : 升级主机模块处理任务
+************************************************************************************************/
+void DataHandle_Updata_HostTask(void *p_arg)
+{
+    uint8 err;
+    DATA_HANDLE_TASK *taskPtr = NULL;
+	uint8 *rxDataFrmPtr = NULL;
+    uint16 crc16, pkgCodeLen, dataCrc;
+    uint32 writeAddr, codeLength;
+    uint8 buf[13] = {0};
+	uint8 upHostError = 0;
+
+    // 计算未上报的节点的数量
+    taskPtr = (DATA_HANDLE_TASK *)p_arg;
+    TaskRunStatus.DataUpHost = TRUE;
+
+	PORT_BUF_FORMAT *txPortBufPtr = NULL;
+
+
+    DataUpHostTimer = 3600;
+
+    // 升级信息保存格式: Crc16(2)+升级文件保存位置(4)+升级代码总长度(4)+Crc16(2)
+    memcpy(buf, (uint8 *)FLASH_MODULE_UPGRADE_INFO_START, 12);
+    if (((uint16 *)(&buf[10]))[0] != CalCrc16(buf, 10))
+    {
+        goto UPHOST_ERROR;
+    }
+
+    // 提取数据
+    crc16 = ((uint16 *)buf)[0]; // 升级代码的校验码
+    writeAddr = 0;
+    codeLength = ((uint32 *)(&buf[6]))[0]; // 升级代码总长度
+    pkgCodeLen = 1000;
+	if( 0 == codeLength ){
+        goto UPHOST_ERROR;
+	}
+
+	while( upHostError < 10){
+
+		// 申请一个内存用于中间数据处理
+		if ((void *)0 == (txPortBufPtr = OSMemGetOpt(LargeMemoryPtr, 10, TIME_DELAY_MS(50)))) {
+			goto UPHOST_ERROR;
+		}
+
+		// 单包的长度
+		pkgCodeLen = (codeLength - writeAddr > 1000) ? 1000 : (codeLength - writeAddr);
+		txPortBufPtr->Property.PortNo = Usart_Rf;
+		txPortBufPtr->Property.FilterDone = 1;
+		txPortBufPtr->Length = 0;
+		txPortBufPtr->Buffer[txPortBufPtr->Length++] = 0x55;
+		txPortBufPtr->Buffer[txPortBufPtr->Length++] = 0xAA;
+		txPortBufPtr->Buffer[txPortBufPtr->Length++] = (uint8)crc16;
+		txPortBufPtr->Buffer[txPortBufPtr->Length++] = (uint8)(crc16 >> 8);
+		txPortBufPtr->Buffer[txPortBufPtr->Length++] = (uint8)codeLength;
+		txPortBufPtr->Buffer[txPortBufPtr->Length++] = (uint8)(codeLength >> 8);
+		txPortBufPtr->Buffer[txPortBufPtr->Length++] = (uint8)(codeLength >> 16);
+		txPortBufPtr->Buffer[txPortBufPtr->Length++] = (uint8)(codeLength >> 24);
+		txPortBufPtr->Buffer[txPortBufPtr->Length++] = (uint8)writeAddr;
+		txPortBufPtr->Buffer[txPortBufPtr->Length++] = (uint8)(writeAddr >> 8);
+		txPortBufPtr->Buffer[txPortBufPtr->Length++] = (uint8)(writeAddr >> 16);
+		txPortBufPtr->Buffer[txPortBufPtr->Length++] = (uint8)(writeAddr >> 24);
+		txPortBufPtr->Buffer[txPortBufPtr->Length++] = (uint8)pkgCodeLen;
+		txPortBufPtr->Buffer[txPortBufPtr->Length++] = (uint8)(pkgCodeLen >> 8);
+		memcpy(&txPortBufPtr->Buffer[txPortBufPtr->Length],
+			(uint8 *)(FLASH_MODULE_UPGRADECODE_START_ADDR + writeAddr),
+			pkgCodeLen);
+		txPortBufPtr->Length += pkgCodeLen;
+		dataCrc = CalCrc16((uint8 *)(&txPortBufPtr->Buffer[2]), txPortBufPtr->Length-2);	 // Crc16校验
+		txPortBufPtr->Buffer[txPortBufPtr->Length++] = (uint8)((dataCrc)&0xFF);
+		txPortBufPtr->Buffer[txPortBufPtr->Length++] = (uint8)((dataCrc >> 8)&0xFF);
+
+
+        taskPtr->PkgSn = txPortBufPtr->Buffer[2];
+        taskPtr->Command = txPortBufPtr->Buffer[3];
+        taskPtr->PortNo = Usart_Rf;
+
+		// 第一包数据需要先将主机复位进入 boot 模式，并将串口波特率切到 115200
+		if( 0 == writeAddr ){
+			OS_ENTER_CRITICAL();
+			Uart_RF_Config(Usart_Rf, Parity_Even, DataBits_9, StopBits_1, 9600); 			// RF串口初始化
+			OS_EXIT_CRITICAL();
+			DataHandle_ResetHostProc(); // 复位主机，使进入 boot模式。
+			OSTimeDlyHMSM(0, 0, 0, 300);
+			OS_ENTER_CRITICAL();
+			Uart_RF_Config(Usart_Rf, Parity_Even, DataBits_9, StopBits_1, 115200); 			// RF串口初始化
+			OS_EXIT_CRITICAL();
+		}
+
+		if (txPortBufPtr->Property.PortNo < Port_Total &&
+			OS_ERR_NONE != OSMboxPost(SerialPort.Port[txPortBufPtr->Property.PortNo].MboxTx, txPortBufPtr)) {
+			OSMemPut(LargeMemoryPtr, txPortBufPtr);
+		} else {
+			OSFlagPost(GlobalEventFlag, (OS_FLAGS)(1 << txPortBufPtr->Property.PortNo + SERIALPORT_TX_FLAG_OFFSET), OS_FLAG_SET, &err);
+		}
+
+		// 等待服务器的应答
+		rxDataFrmPtr = OSMboxPend(taskPtr->Mbox, TIME_DELAY_MS(1000), &err);
+		if ((void *)0 != rxDataFrmPtr) {
+			// 查找那个节点并更改状态保存起
+			if ( UpHost_Success == rxDataFrmPtr[14] ) {
+				writeAddr += pkgCodeLen;
+				upHostError = 0;
+			} else if ( rxDataFrmPtr[14] > UpHost_Success) {
+				upHostError++;
+			}
+			OSMemPut(LargeMemoryPtr, rxDataFrmPtr);
+
+			// 升级成功，将串口切回正常工作模式。
+			// 后续需要将 flash 清空并上报服务器"主机模块升级成功命令"
+			if ( writeAddr >= codeLength ) {
+				upHostError = 100;
+				OS_ENTER_CRITICAL();
+				Uart_RF_Config(Usart_Rf, Parity_Even, DataBits_9, StopBits_1, 9600);			// RF串口初始化
+				OS_EXIT_CRITICAL();
+				//Gprs_OutputDebugMsg(0,"\n-- 升级成功 --\n");
+
+				break;
+			}
+		}else {
+			upHostError++;
+		}
+	}
+
+
+UPHOST_ERROR:
+
+    DataUpHostTimer = 0;
+    OSMboxDel(taskPtr->Mbox, OS_DEL_ALWAYS, &err);
+    OSSchedLock();
+    OSTaskDel(OS_PRIO_SELF);
+    OSMemPut(LargeMemoryPtr, taskPtr->StkPtr);
+    taskPtr->StkPtr = (void *)0;
+    TaskRunStatus.DataUpHost = FALSE;
+    OSSchedUnlock();
+}
+
+
+/************************************************************************************************
+* Function Name: DataHandle_Updata_HostProc
+* Decription   : 升级主机模块
+************************************************************************************************/
+void DataHandle_Updata_HostProc(void)
+{
+    uint8 err;
+    DATA_HANDLE_TASK *taskPtr = NULL;
+
+    DataUpHostTimer = 60;
+
+    // 确保没有上传任务没有运行
+    if (TRUE == TaskRunStatus.DataUpload || TRUE == TaskRunStatus.DataForward ||
+		TRUE == TaskRunStatus.DataDownload || TRUE == TaskRunStatus.DataReplenish ||
+		TRUE == TaskRunStatus.DataUpHost ) {
+        return;
+    }
+    // 搜索未被占用的空间,创建升级主机任务
+    if ((void *)0 == (taskPtr = DataHandle_GetEmptyTaskPtr())) {
+        return;
+    }
+    if ((void *)0 == (taskPtr->StkPtr = (OS_STK *)OSMemGetOpt(LargeMemoryPtr, 10, TIME_DELAY_MS(50)))) {
+        return;
+    }
+    taskPtr->Mbox = OSMboxCreate((void *)0);
+    taskPtr->Msg = (void *)0;
+    if (OS_ERR_NONE != OSTaskCreate(DataHandle_Updata_HostTask, taskPtr,
+        taskPtr->StkPtr + MEM_LARGE_BLOCK_LEN / sizeof(OS_STK) - 1, taskPtr->Prio)) {
+        OSMemPut(LargeMemoryPtr, taskPtr->StkPtr);
+        taskPtr->StkPtr = (void *)0;
+        OSMboxDel(taskPtr->Mbox, OS_DEL_ALWAYS, &err);
+    }
+}
+
+
+/************************************************************************************************
+* Function Name: Data_Module_SwUpdate
+* Decription   : 无线模块升级代码保存并处理函数
+* Input        : DataFrmPtr-指向数据帧的指针
+* Output       : 无
+* Others       : 下行: Crc16(2)+写入地址(4)+升级代码总长度(4)+本包升级代码长度(2)+升级代码(N)
+*                上行: Crc16(2)+写入地址(4)+操作结果(1)
+************************************************************************************************/
+void Data_Module_SwUpdate(DATA_FRAME_STRUCT *DataFrmPtr)
+{
+    uint16 crc16, pkgCodeLen;
+    uint32 writeAddr, codeLength;
+    uint8 *codeBufPtr = NULL, *dataBufPtr = NULL;
+    uint8 buf[12];
+
+    // 提取数据
+    dataBufPtr = DataFrmPtr->DataBuf;
+    crc16 = ((uint16 *)dataBufPtr)[0];
+    writeAddr = ((uint32 *)(dataBufPtr + 2))[0];
+    codeLength = ((uint32 *)(dataBufPtr + 6))[0];
+    pkgCodeLen = ((uint16 *)(dataBufPtr + 10))[0];
+    codeBufPtr = dataBufPtr + 12;
+
+    // 如果升级代码长度错误
+    if (codeLength > FLASH_MODULE_UPGRADECODE_SIZE * FLASH_PAGE_SIZE) {
+        *(dataBufPtr + 6) = OP_ParameterError;
+        DataFrmPtr->DataLen = 7;
+        return;
+    }
+
+    // 如果收到的写入地址为0,表示有一个新的升级要进行
+    if (0 == writeAddr) {
+        Flash_Erase(FLASH_MODULE_UPGRADECODE_START_ADDR, FLASH_MODULE_UPGRADECODE_SIZE);
+        Flash_Erase(FLASH_MODULE_UPGRADE_INFO_START, FLASH_MODULE_UPGRADE_INFO_SIZE);
+        // 升级信息保存格式: Crc16(2)+升级文件保存位置(4)+升级代码总长度(4)+Crc16(2)
+        memcpy(buf, dataBufPtr, sizeof(buf));
+        ((uint32 *)(&buf[2]))[0] = 0; //FLASH_MODULE_UPGRADECODE_START_ADDR;
+        ((uint16 *)(&buf[10]))[0] = CalCrc16(buf, 10);
+        Flash_Write(buf, 16, FLASH_MODULE_UPGRADE_INFO_START);
+    }
+
+    // 如果程序的校验字节或升级代码总长度错误则返回错误
+    if (crc16 != ((uint16 *)FLASH_MODULE_UPGRADE_INFO_START)[0] ||
+        codeLength != ((uint32 *)(FLASH_MODULE_UPGRADE_INFO_START + 6))[0]) {
+        *(dataBufPtr + 6) = OP_ParameterError;
+        DataFrmPtr->DataLen = 7;
+        return;
+    }
+
+    // 写入升级代码
+    if (codeLength >= writeAddr + pkgCodeLen) {
+        if (0 != memcmp(codeBufPtr, (uint8 *)(FLASH_MODULE_UPGRADECODE_START_ADDR + writeAddr), pkgCodeLen)) {
+            Flash_Write(codeBufPtr, pkgCodeLen, FLASH_MODULE_UPGRADECODE_START_ADDR + writeAddr);
+            if (0 != memcmp(codeBufPtr, (uint8 *)(FLASH_MODULE_UPGRADECODE_START_ADDR + writeAddr), pkgCodeLen)) {
+                *(dataBufPtr + 6) = OP_Failure;
+                DataFrmPtr->DataLen = 7;
+                return;
+            }
+        }
+    } else {
+        *(dataBufPtr + 6) = OP_ParameterError;
+        DataFrmPtr->DataLen = 7;
+        return;
+    }
+
+    // 检查是否是最后一包
+    if (writeAddr + pkgCodeLen >= codeLength) {
+        if (crc16 == CalCrc16((uint8 *)FLASH_MODULE_UPGRADECODE_START_ADDR, codeLength)) {
+            *(dataBufPtr + 6) = OP_Succeed;
+			DataUpHostTimer = 3; // 升级主机模块
+        } else {
+            *(dataBufPtr + 6) = OP_Failure;
+        }
+    } else {
+        *(dataBufPtr + 6) = OP_Succeed;
+    }
+    DataFrmPtr->DataLen = 7;
+    return;
+}
 
 /************************************************************************************************
 * Function Name: DataHandle_ReadHostChannelTask
@@ -2067,9 +2387,16 @@ void DataHandle_RxCmdProc(DATA_FRAME_STRUCT *DataFrmPtr)
             Data_EepromCheckProc(DataFrmPtr);
             break;
 
+		// 无线模块升级 0xF4
+		case Module_Software_Update_Cmd:
+			Data_Module_SwUpdate(DataFrmPtr);
+			break;
+
         // 其他指令不支持
         default:
+#if PRINT_INFO
             Gprs_OutputDebugMsg(TRUE, "--该指令暂不支持--\n");
+#endif
             postHandle = NONE_ACK;
             OSMemPut(LargeMemoryPtr, DataFrmPtr);
             break;
@@ -2263,6 +2590,10 @@ void DataHandle_Task(void *p_arg)
                 // 数据上传处理
                 eventFlag &= ~FLAG_DATA_UPLOAD_TIMER;
                 DataHandle_DataUploadProc();
+            } else if (eventFlag & FLAG_DATA_UPHOST_TIMER) {
+                // 升级主机处理
+                eventFlag &= ~FLAG_DATA_UPHOST_TIMER;
+                DataHandle_Updata_HostProc();
             } else if (eventFlag & FLAG_RTC_TIMING_TIMER) {
                 // 时钟主动校时处理
                 eventFlag &= ~FLAG_RTC_TIMING_TIMER;

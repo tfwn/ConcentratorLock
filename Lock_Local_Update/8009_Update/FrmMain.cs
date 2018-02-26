@@ -42,7 +42,7 @@ namespace _8009_Update
         }
         private void FillLabel()
         {
-            this.Text = "CTP共享停车集中器本地软件升级工具_V1.00";
+            this.Text = "CTP共享停车集中器本地软件升级工具_V1.01";
             //this.lbSelectPort.Text = "选择端口" + ":";
             //this.btOpenPort.Text = "打开端口";
             this.tsUsbStatus.Text = "USB设备未连接!";

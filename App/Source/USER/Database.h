@@ -64,8 +64,13 @@ typedef enum {
 
 // 设备类型
 typedef enum {
+    Dev_AllMeter = 0x00,                                    // 全部表类型
+
 	Dev_LOCK = 0x44,										// 地锁
+	Dev_Server = 0xFA,										// 服务器
     Dev_Concentrator = 0xFC,                                // 集中器
+
+	Dev_Empty = 0xFF										// 空类型
 } DEVICE_TYPE;
 
 /************************************************************************************************

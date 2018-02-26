@@ -65,7 +65,8 @@ namespace Parking.UpgradeManage
                          
                             return;
                         }
-                        var m= Regex.Match(restOfStream, @"SRWF-\d{4}-[a-zA-Z]{1,4}-\d{8}-Vsp\d{1}.\d{2}");
+                        //var m = Regex.Match(restOfStream, @"SRWF-\d{4}-[a-zA-Z]{1,4}-\d{8}-Vsp\d{1}.\d{2}");
+                        var m = Regex.Match(restOfStream, @"SRWF-CTP-PARKING-\d{8}-Vsp\d{1}.\d{2}");
                         if ( m.Success)
                         {
                             lblVersionInfo.Text = m.Value;

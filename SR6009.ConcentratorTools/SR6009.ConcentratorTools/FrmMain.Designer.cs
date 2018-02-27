@@ -1711,7 +1711,7 @@
             this.MinimumSize = new System.Drawing.Size(1360, 768);
             this.Name = "FrmMain";
             this.Padding = new System.Windows.Forms.Padding(3);
-            this.Text = "CTP共享停车集中器V1.01";
+            this.Text = "CTP共享停车集中器V1.10";
             this.Load += new System.EventHandler(this.FrmMain_Load);
             this.SizeChanged += new System.EventHandler(this.FrmMain_SizeChanged);
             this.statusMainStrip.ResumeLayout(false);

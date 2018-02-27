@@ -19,13 +19,13 @@
 *   版本发布列表
 ************************************************************************************************/
 #define SRWF_CTP_20180112_V100                    0   // 第一版
-#define SRWF_CTP_20180226_V101                    1
+#define SRWF_CTP_20180226_V110                    1
 
 #define SRWF_CTP_TEST                    		  999   // 测试
 
 
 // 当前使用的版本
-#define CURRENT_VERSION                             SRWF_CTP_20180226_V101
+#define CURRENT_VERSION                             SRWF_CTP_20180226_V110
 
 
 /************************************************************************************************
@@ -62,7 +62,7 @@
 #define SOFTWARE_VERSION_INFO                   "SRWF-CTP-PARKING-20180116-Vsp1.01"
 #endif
 
-#if (CURRENT_VERSION == SRWF_CTP_20180226_V101)
+#if (CURRENT_VERSION == SRWF_CTP_20180226_V110)
 /*-----------------------------------------------------------------------------------------------
 软件说明:
 1.增加集中器修改主机模块(2e28)频点功能。
@@ -73,10 +73,10 @@
 #define EEPROM_SEL_M01                                      // 选择1M的EEPROM EEPROM_SEL_M512/EEPROM_SEL_M01
 /*---------------------------------------------------------------------------------------------*/
 // 版本信息
-#define SW_VERSION                              0x0101      // 程序版本
+#define SW_VERSION                              0x0110      // 程序版本
 #define HW_VERSION                              0x0200      // 硬件版本
 #define PT_VERSION                              0x0101      // 协议版本
-#define SOFTWARE_VERSION_INFO                   "SRWF-CTP-PARKING-20180226-Vsp1.01"
+#define SOFTWARE_VERSION_INFO                   "SRWF-CTP-PARKING-20180226-Vsp1.10"
 #endif
 
 

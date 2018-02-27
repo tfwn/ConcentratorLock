@@ -116,8 +116,8 @@ namespace SR6009_Concentrator_Tools
         }
         private void FrmMain_Load(object sender, EventArgs e)
         {
-            this.Text = "CTP共享停车集中器V1.01";
-            AddStringToCommBox(false, " CTP共享停车集中器V1.01\n <<<==================================>>>", null, Color.DarkGreen);
+            this.Text = "CTP共享停车集中器V1.10";
+            AddStringToCommBox(false, " CTP共享停车集中器V1.10\n <<<==================================>>>", null, Color.DarkGreen);
             this.Width = 1360;
             GetLocalIP();
             cmbTimeType.SelectedIndex = 0;

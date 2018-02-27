@@ -1687,8 +1687,8 @@ void DataHandle_Updata_HostTask(void *p_arg)
 			goto UPHOST_ERROR;
 		}
 
-		// 单包的长度
-		pkgCodeLen = (codeLength - writeAddr > 1000) ? 1000 : (codeLength - writeAddr);
+// 0x55AA + 总文件Crc16(2)+升级代码总长度(4)+升级文件保存位置(4)+本包代码长度(2)+本包代码数据(N)+ 此包数据Crc16(2)
+		pkgCodeLen = (codeLength - writeAddr > 1000) ? 1000 : (codeLength - writeAddr);// 单包的长度
 		txPortBufPtr->Property.PortNo = Usart_Rf;
 		txPortBufPtr->Property.FilterDone = 1;
 		txPortBufPtr->Length = 0;
@@ -1713,7 +1713,6 @@ void DataHandle_Updata_HostTask(void *p_arg)
 		dataCrc = CalCrc16((uint8 *)(&txPortBufPtr->Buffer[2]), txPortBufPtr->Length-2);	 // Crc16校验
 		txPortBufPtr->Buffer[txPortBufPtr->Length++] = (uint8)((dataCrc)&0xFF);
 		txPortBufPtr->Buffer[txPortBufPtr->Length++] = (uint8)((dataCrc >> 8)&0xFF);
-
 
         taskPtr->PkgSn = txPortBufPtr->Buffer[2];
         taskPtr->Command = txPortBufPtr->Buffer[3];
@@ -1750,15 +1749,10 @@ void DataHandle_Updata_HostTask(void *p_arg)
 			}
 			OSMemPut(LargeMemoryPtr, rxDataFrmPtr);
 
-			// 升级成功，将串口切回正常工作模式。
 			// 后续需要将 flash 清空并上报服务器"主机模块升级成功命令"
 			if ( writeAddr >= codeLength ) {
 				upHostError = 100;
-				OS_ENTER_CRITICAL();
-				Uart_RF_Config(Usart_Rf, Parity_Even, DataBits_9, StopBits_1, 9600);			// RF串口初始化
-				OS_EXIT_CRITICAL();
 				//Gprs_OutputDebugMsg(0,"\n-- 升级成功 --\n");
-
 				break;
 			}
 		}else {
@@ -1768,6 +1762,11 @@ void DataHandle_Updata_HostTask(void *p_arg)
 
 
 UPHOST_ERROR:
+
+	// 将串口切回正常工作模式。
+	OS_ENTER_CRITICAL();
+	Uart_RF_Config(Usart_Rf, Parity_Even, DataBits_9, StopBits_1, 9600);			// RF串口初始化
+	OS_EXIT_CRITICAL();
 
     DataUpHostTimer = 0;
     OSMboxDel(taskPtr->Mbox, OS_DEL_ALWAYS, &err);
